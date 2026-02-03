@@ -86,7 +86,9 @@ class ApprovalHandler:
         import json
 
         # 1. Get approval instance details
+        print(f"Fetching approval instance details for {instance_code}...")
         instance = await self.feishu_client.get_approval_instance(instance_code)
+        print(f"Got instance data, approval_name: {instance.get('approval_name', 'N/A')}")
         approval_name = instance.get("approval_name", "")
         form_json = instance.get("form", "[]")
 

@@ -121,6 +121,7 @@ def get_instance_code(body: Dict[str, Any]) -> str:
 
 async def process_approval_event(body: Dict[str, Any]) -> None:
     """Background task to process approval event."""
+    import traceback
     instance_code = get_instance_code(body)
 
     # Check status first - only do instance dedup for APPROVED events
@@ -141,6 +142,7 @@ async def process_approval_event(body: Dict[str, Any]) -> None:
         await approval_handler.handle_event(body)
     except Exception as e:
         print(f"Error processing approval event: {e}")
+        traceback.print_exc()
 
 
 @APP.get("/health")
