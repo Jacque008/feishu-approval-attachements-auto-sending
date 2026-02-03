@@ -32,12 +32,8 @@ services:
       - key: SMTP_FROM_EMAIL
         sync: false
       # Target emails for approval types
-      - key: EMAIL_费用报销TEST
+      - key: EMAIL_EXPENSE
         sync: false
-      - key: EMAIL_付款TEST
-        sync: false
-      - key: EMAIL_费用报销
-        sync: false
-      - key: EMAIL_付款_瑞典对公_SHIC
+      - key: EMAIL_PAYMENT_SWEDEN_SHIC
         sync: false
     healthCheckPath: /health

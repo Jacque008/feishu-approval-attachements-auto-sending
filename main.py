@@ -13,6 +13,7 @@ APP = FastAPI()
 
 # Event deduplication - in production, use Redis or database
 _processed_events: Set[str] = set()
+_processed_instances: Set[str] = set()  # Additional dedup by instance_code
 _MAX_PROCESSED_EVENTS = 10000
 
 settings = get_settings()
@@ -88,8 +89,54 @@ def is_duplicate_event(event_id: str) -> bool:
     return False
 
 
+def check_and_mark_instance(instance_code: str) -> bool:
+    """Check if instance was already processed, and mark it if not.
+
+    Returns True if this is a new instance (not processed before).
+    Returns False if already processed (duplicate).
+    """
+    global _processed_instances
+
+    if instance_code in _processed_instances:
+        return False  # Already processed
+
+    # Simple cleanup when set gets too large
+    if len(_processed_instances) >= _MAX_PROCESSED_EVENTS:
+        _processed_instances = set(list(_processed_instances)[-5000:])
+
+    # Mark immediately to prevent concurrent processing
+    _processed_instances.add(instance_code)
+    return True  # New instance, now marked
+
+
+def get_instance_code(body: Dict[str, Any]) -> str:
+    """Extract instance_code from event body."""
+    event = body.get("event", {})
+    return (
+        event.get("instance_code")
+        or event.get("object", {}).get("instance_code")
+        or ""
+    )
+
+
 async def process_approval_event(body: Dict[str, Any]) -> None:
     """Background task to process approval event."""
+    instance_code = get_instance_code(body)
+
+    # Check status first - only do instance dedup for APPROVED events
+    event_data = body.get("event", {})
+    status = (
+        event_data.get("status")
+        or event_data.get("instance_status")
+        or event_data.get("object", {}).get("status")
+    )
+
+    # For APPROVED events, check and mark instance to prevent concurrent processing
+    if status == "APPROVED" and instance_code:
+        if not check_and_mark_instance(instance_code):
+            print(f"Instance {instance_code} already being processed, skipping")
+            return
+
     try:
         await approval_handler.handle_event(body)
     except Exception as e:
@@ -124,14 +171,15 @@ async def feishu_webhook(request: Request, background_tasks: BackgroundTasks):
     print(f"=== Received webhook ===")
     print(f"Body: {json.dumps(body, ensure_ascii=False, indent=2)}")
 
-    # 4) Deduplication check
+    # 4) Deduplication check - by event_id
     event_id = get_event_id(body)
     if is_duplicate_event(event_id):
         print(f"Duplicate event {event_id}, skipping")
         return JSONResponse({"ok": True})
 
-    # 5) Process event in background
-    print(f"Processing event: {event_id}")
+    # 5) Process event in background (instance dedup happens there for APPROVED events)
+    instance_code = get_instance_code(body)
+    print(f"Processing event: {event_id}, instance: {instance_code}")
     background_tasks.add_task(process_approval_event, body)
 
     return JSONResponse({"ok": True})

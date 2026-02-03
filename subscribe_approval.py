@@ -34,8 +34,8 @@ async def subscribe(approval_code: str):
 async def main():
     # Add all approval codes here
     approval_codes = [
-        "6E99852C-4662-4158-AB6B-FEB27D196E38",  # 付款test / 付款-瑞典对公-SHIC
-        "C439B482-9BBF-4F10-9E3C-95372B37F146",  # 费用报销test / 费用报销
+        "96FDDC67-4638-4F4A-B220-90C222EADFE7",  # 付款-瑞典对公-SHIC
+        "C439B482-9BBF-4F10-9E3C-95372B37F146",  # 费用报销
         # Add more approval codes as needed
     ]
 

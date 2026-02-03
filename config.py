@@ -19,11 +19,8 @@ class Settings(BaseSettings):
     smtp_from_email: str
 
     # Target email addresses for different approval types
-    # Key format: EMAIL_审批名称 (spaces replaced with underscores)
-    email_费用报销test: str = ""
-    email_付款test: str = ""
-    email_费用报销: str = ""
-    email_付款_瑞典对公_shic: str = ""
+    email_expense: str = ""           # 费用报销
+    email_payment_sweden_shic: str = ""  # 付款-瑞典对公-SHIC
 
     # Auto-decrypt encrypted values (starting with "ENC:")
     @field_validator("feishu_app_secret", "smtp_password", mode="before")
