@@ -1,9 +1,5 @@
-import aiosmtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email.mime.text import MIMEText
-from email.header import Header
-from email import encoders
+import base64
+import resend
 
 from .attachment import AttachmentInfo
 
@@ -11,17 +7,11 @@ from .attachment import AttachmentInfo
 class EmailSender:
     def __init__(
         self,
-        host: str,
-        port: int,
-        username: str,
-        password: str,
+        api_key: str,
         from_email: str,
     ):
-        self.host = host
-        self.port = port
-        self.username = username
-        self.password = password
         self.from_email = from_email
+        resend.api_key = api_key
 
     async def send_with_attachments(
         self,
@@ -30,54 +20,25 @@ class EmailSender:
         body: str,
         attachments: list[AttachmentInfo],
     ) -> None:
-        """Send email with attachments via SMTP SSL."""
-        msg = MIMEMultipart()
-        msg["From"] = self.from_email
-        msg["To"] = to_email
-        msg["Subject"] = Header(subject, "utf-8")
-
-        # Add body
-        msg.attach(MIMEText(body, "plain", "utf-8"))
-
-        # Add attachments
+        """Send email with attachments via Resend API."""
+        # Prepare attachments for Resend
+        resend_attachments = []
         for attachment in attachments:
             if attachment.content is None:
                 continue
+            resend_attachments.append({
+                "filename": attachment.name,
+                "content": list(attachment.content),  # Resend expects list of bytes
+            })
 
-            part = MIMEBase("application", "octet-stream")
-            part.set_payload(attachment.content)
-            encoders.encode_base64(part)
+        # Send email via Resend
+        params = {
+            "from": self.from_email,
+            "to": [to_email],
+            "subject": subject,
+            "text": body,
+        }
+        if resend_attachments:
+            params["attachments"] = resend_attachments
 
-            # Encode filename for Chinese characters
-            encoded_name = Header(attachment.name, "utf-8").encode()
-            part.add_header(
-                "Content-Disposition",
-                "attachment",
-                filename=encoded_name,
-            )
-            msg.attach(part)
-
-        # Send email - use STARTTLS for port 587, SSL for port 465
-        # Use longer timeout (120s) for cloud hosting environments
-        if self.port == 587:
-            # Microsoft 365 / Office 365 uses STARTTLS
-            await aiosmtplib.send(
-                msg,
-                hostname=self.host,
-                port=self.port,
-                username=self.username,
-                password=self.password,
-                start_tls=True,
-                timeout=120,
-            )
-        else:
-            # Port 465 uses SSL
-            await aiosmtplib.send(
-                msg,
-                hostname=self.host,
-                port=self.port,
-                username=self.username,
-                password=self.password,
-                use_tls=True,
-                timeout=120,
-            )
+        resend.Emails.send(params)

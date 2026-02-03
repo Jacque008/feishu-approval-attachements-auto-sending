@@ -11,19 +11,16 @@ class Settings(BaseSettings):
     feishu_verification_token: str
     feishu_signing_secret: str = ""
 
-    # SMTP
-    smtp_host: str
-    smtp_port: int = 465
-    smtp_user: str
-    smtp_password: str
-    smtp_from_email: str
+    # Resend Email
+    resend_api_key: str
+    resend_from_email: str = "onboarding@resend.dev"  # Default test sender
 
     # Target email addresses for different approval types
     email_expense: str = ""           # 费用报销
     email_payment_sweden_shic: str = ""  # 付款-瑞典对公-SHIC
 
     # Auto-decrypt encrypted values (starting with "ENC:")
-    @field_validator("feishu_app_secret", "smtp_password", mode="before")
+    @field_validator("feishu_app_secret", mode="before")
     @classmethod
     def decrypt_secret(cls, v):
         if isinstance(v, str) and v.startswith("ENC:"):

@@ -19,11 +19,8 @@ class ApprovalHandler:
         )
         self.attachment_service = AttachmentService(self.feishu_client)
         self.email_sender = EmailSender(
-            host=settings.smtp_host,
-            port=settings.smtp_port,
-            username=settings.smtp_user,
-            password=settings.smtp_password,
-            from_email=settings.smtp_from_email,
+            api_key=settings.resend_api_key,
+            from_email=settings.resend_from_email,
         )
 
     def _get_target_email(self, approval_name: str) -> Optional[str]:

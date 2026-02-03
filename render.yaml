@@ -21,15 +21,10 @@ services:
         sync: false
       - key: FEISHU_SIGNING_SECRET
         sync: false
-      - key: SMTP_HOST
+      # Resend Email (https://resend.com)
+      - key: RESEND_API_KEY
         sync: false
-      - key: SMTP_PORT
-        sync: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASSWORD
-        sync: false
-      - key: SMTP_FROM_EMAIL
+      - key: RESEND_FROM_EMAIL
         sync: false
       # Target emails for approval types
       - key: EMAIL_EXPENSE
