@@ -29,6 +29,7 @@ class EmailSender:
             resend_attachments.append({
                 "filename": attachment.name,
                 "content": list(attachment.content),  # Resend expects list of bytes
+                "content_type": "application/octet-stream",  # Force as attachment, not inline
             })
 
         # Send email via Resend
