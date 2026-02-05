@@ -30,14 +30,20 @@ class EmailSender:
                 "filename": attachment.name,
                 "content": list(attachment.content),  # Resend expects list of bytes
                 "content_type": "application/octet-stream",  # Force as attachment, not inline
+                "headers": {
+                    "Content-Disposition": f'attachment; filename="{attachment.name}"',
+                },
             })
 
         # Send email via Resend
+        # Use HTML format to prevent email clients from auto-inlining images
+        html_body = body.replace("\n", "<br>")
         params = {
             "from": self.from_email,
             "to": [to_email],
             "subject": subject,
             "text": body,
+            "html": f"<html><body><p>{html_body}</p></body></html>",
         }
         if resend_attachments:
             params["attachments"] = resend_attachments
