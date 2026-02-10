@@ -169,7 +169,7 @@ class ApprovalHandler:
             return False
 
         # 6. Send email with format: [审批种类]-审批标题
-        subject = f"[{approval_name}]-{approval_title}"
+        subject = f"[{approval_name}]-{approval_title.replace(chr(10), ' ').replace(chr(13), '')}"
         body = (
             f"审批已通过\n\n"
             f"审批类型: {approval_name}\n"
